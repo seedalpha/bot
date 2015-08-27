@@ -1,0 +1,11 @@
+{
+  "name": "seed-bot",
+  "version": "1.0.0",
+  "description": "a generic, pluggable chat bot ",
+  "main": "index.js",
+  "author": "Vladimir Popov <vlad@seedalpha.net>",
+  "license": "SeedAlpha ©2015",
+  "dependencies": {
+    "debug": "^2.2.0"
+  }
+}

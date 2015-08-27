@@ -98,7 +98,7 @@ bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
 // have second level of middleware for after command had been matched
 bot.cmd(/invite .*/, isAdmin, function(cmd, next) {
   invite(cmd.params[0]);
-  cmd.respond(fmt('User %s invited, cmd.params[0]));
+  cmd.respond(fmt('User %s invited', cmd.params[0]));
 });
 
 var context = {

@@ -4,6 +4,13 @@ a generic, pluggable chat bot
 
 ### Changelog
 
+`3.0.0`:
+
+- clean up `cmd`
+- add `.result(...)` to cmd
+- add `.error(...)` to cmd
+- change bot result event to `result` (was 'respond')
+
 `2.0.0`:
 
 - `exec` doesn't take callback anymore, bot emits events instead
@@ -29,8 +36,10 @@ bot.use(function(cmd, next) {
   // cmd.intentParams
   // cmd.confidence
   // cmd.parts // []
-  // cmd.respond(...)
-  // cmd.log(...)
+  // cmd.result(fn(result))
+  // cmd.error(fn(error))
+  // cmd.log(fn(args...))
+  // cmd.emit(event, args...)
   next();
 });
 
@@ -84,7 +93,7 @@ bot.use(stripLeading('<@U12312312321>'));
 bot.cmd('get_stock_quote', function(cmd, next) {
   getQuote(cmd.intentParams.ticker, function(err, result) {
     if (err) return next(err);
-    cmd.respond(fmt('%s: %s', result.comapany, result.price));
+    cmd.result(fmt('%s: %s', result.comapany, result.price));
   });
 });
 
@@ -92,21 +101,21 @@ bot.cmd('get_stock_quote', function(cmd, next) {
 bot.cmd(/quote .*/, function(cmd, next) {
   getQuote(cmd.params[0], function(err, result) {
     if (err) return next(err);
-    var response = fmt('%s: %s', result.comapany, result.price);
-    cmd.log(response);
-    cmd.respond(response);
+    result = fmt('%s: %s', result.company, result.price);
+    cmd.log(result);
+    cmd.result(result);
   });
 });
 
 // match any regex or intent
 bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
-  cmd.respond('Welcome!');
+  cmd.result('Welcome!');
 });
 
 // have second level of middleware for after command had been matched
 bot.cmd(/invite .*/, isAdmin, function(cmd, next) {
   invite(cmd.params[0]);
-  cmd.respond(fmt('User %s invited', cmd.params[0]));
+  cmd.result(fmt('User %s invited', cmd.params[0]));
 });
 
 var context = {
@@ -116,7 +125,7 @@ var context = {
 };
 
 
-bot.on('response', function(result) {
+bot.on('result', function(result) {
   console.log(result); // 'Apple 125.004', 'Welcome'
 });
 

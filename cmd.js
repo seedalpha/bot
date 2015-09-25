@@ -2,8 +2,7 @@
  * Module dependencies
  */
 
-var Events      = require('events').EventEmitter;
-var inherits    = require('util').inherits;
+var extend = require('seed-extend');
 
 /**
  * Bot command
@@ -16,30 +15,7 @@ function Cmd(params) {
     return new Cmd(params);
   }
   
-  Events.call(this);
-  
-  // extend self with params
-  Object.keys(params).forEach(function(key) {
-    this[key] = params[key];
-  }.bind(this));
-  
-  // cleanup
-  this.on('respond', this._cleanup.bind(this));
-  this.on('error', this._cleanup.bind(this));
-}
-
-inherits(Cmd, Events);
-
-/**
- * Cleanup cmd
- *
- * @api private
- */
-
-Cmd.prototype._cleanup = function() {
-  process.nextTick(function() {
-    this.removeAllListeners();
-  }.bind(this));
+  extend(this, params);
 }
 
 /**
@@ -48,10 +24,10 @@ Cmd.prototype._cleanup = function() {
  * @emit 'respond'
  */
 
-Cmd.prototype.respond = function() {
-  var args = [].slice.call(arguments);
-  this.response = args;
-  this.emit.apply(this, ['respond'].concat(args));
+Cmd.prototype.result = function() {
+  this.emit.apply(null, 
+    ['result'].concat([].slice.call(arguments))
+  );
 }
 
 /**
@@ -61,9 +37,9 @@ Cmd.prototype.respond = function() {
  */
 
 Cmd.prototype.error = function() {
-  var args = [].slice.call(arguments);
-  this.error = args;
-  this.emit.apply(this, ['error'].concat(args));
+  this.emit.apply(null, 
+    ['error'].concat([].slice.call(arguments))
+  );
 }
 
 /**
@@ -73,8 +49,9 @@ Cmd.prototype.error = function() {
  */
 
 Cmd.prototype.log = function() {
-  var args = [].slice.call(arguments);
-  this.emit.apply(this, ['log'].concat(args));
+  this.emit.apply(null, 
+    ['log'].concat([].slice.call(arguments))
+  );
 }
 
 /**

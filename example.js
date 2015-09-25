@@ -9,13 +9,13 @@ bot.use(function(cmd, next) {
 
 bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
   cmd.log('Welcome!');
-  cmd.respond('Welcome!');
+  cmd.result('Welcome!');
 });
 
 bot.exec('Hi');
 bot.exec('hello');
 
-bot.on('response', function(response) {
+bot.on('result', function(response) {
   console.log('Bot responded with:', response);
 });
 

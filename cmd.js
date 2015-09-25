@@ -24,14 +24,23 @@ function Cmd(params) {
   }.bind(this));
   
   // cleanup
-  this.on('respond', function() {
-    process.nextTick(function() {
-      this.removeAllListeners();
-    }.bind(this));
-  }.bind(this));
+  this.on('respond', this._cleanup.bind(this));
+  this.on('error', this._cleanup.bind(this));
 }
 
 inherits(Cmd, Events);
+
+/**
+ * Cleanup cmd
+ *
+ * @api private
+ */
+
+Cmd.prototype._cleanup = function() {
+  process.nextTick(function() {
+    this.removeAllListeners();
+  }.bind(this));
+}
 
 /**
  * Respond from command
@@ -43,6 +52,18 @@ Cmd.prototype.respond = function() {
   var args = [].slice.call(arguments);
   this.response = args;
   this.emit.apply(this, ['respond'].concat(args));
+}
+
+/**
+ * Error from command
+ * 
+ * @emit 'error'
+ */
+
+Cmd.prototype.error = function() {
+  var args = [].slice.call(arguments);
+  this.error = args;
+  this.emit.apply(this, ['error'].concat(args));
 }
 
 /**

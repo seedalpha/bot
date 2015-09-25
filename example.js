@@ -1,25 +1,25 @@
 var Bot = require('./');
 
-function trim(cmd, next) {
-  cmd.message = cmd.message.trim();
-  next();
-}
-
-function downcase(cmd, next) {
-  cmd.message = cmd.message.toLowerCase();
-  next();
-}
-
 var bot = new Bot();
 
-bot
-  .use(trim)
-  .use(downcase)
-  .cmd(['greeting', /hello/], function(cmd, next) {
-    cmd.respond('Welcome!');
-    // next('fuck');
-  });
-
-bot.exec('  HELLO', function(error, result) {
-  console.log(error, result);
+bot.use(function(cmd, next) {
+  cmd.message = cmd.message.toLowerCase().trim();
+  next();
 });
+
+bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
+  cmd.log('Welcome!');
+  cmd.respond('Welcome!');
+});
+
+bot.exec('Hi');
+bot.exec('hello');
+
+bot.on('response', function(response) {
+  console.log('Bot responded with:', response);
+});
+
+bot.on('log', function(response) {
+  console.log('Bot logged', response);
+});
+

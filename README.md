@@ -2,6 +2,12 @@
 
 a generic, pluggable chat bot 
 
+### Changelog
+
+`2.0.0`:
+
+- `exec` doesn't take callback anymore, bot emits events instead
+
 ### Installation
 
     $ npm install seed-bot
@@ -86,7 +92,9 @@ bot.cmd('get_stock_quote', function(cmd, next) {
 bot.cmd(/quote .*/, function(cmd, next) {
   getQuote(cmd.params[0], function(err, result) {
     if (err) return next(err);
-    cmd.respond(fmt('%s: %s', result.comapany, result.price));
+    var response = fmt('%s: %s', result.comapany, result.price);
+    cmd.log(response);
+    cmd.respond(response);
   });
 });
 
@@ -107,13 +115,14 @@ var context = {
   isAdmin: false
 };
 
-bot.exec('quote AAPL', context, function(error, response) {
-  console.log(error, response); // null, ['Apple 125.004']
+
+bot.on('response', function(result) {
+  console.log(result); // 'Apple 125.004', 'Welcome'
 });
 
-bot.exec('hi there!', function(error, response) {
-  console.log(error, resposne); // null, ['Welcome!']
-});
+bot.exec('quote AAPL', context);
+bot.exec('hi there!);
+
 ```
  
 ### License

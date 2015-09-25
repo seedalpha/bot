@@ -23,8 +23,12 @@ function Bot() {
     return new Bot();
   }
   
+  Events.call(this);
+  
   this.middleware = [];
 }
+
+inherits(Bot, Events);
 
 /**
  * Append middleware
@@ -85,18 +89,10 @@ Bot.prototype.cmd = function() {
  *
  * @param {String} str
  * @param {Object} context, optional
- * @param {Function} cb(err, result)
  * @return {Bot} self
  */
 
-Bot.prototype.exec = function(str, ctx, cb) {
-  if (typeof ctx === 'function') {
-    cb = ctx;
-    ctx = {};
-  }
-  
-  cb = cb || function(){};
-  
+Bot.prototype.exec = function(str, ctx) {
   var cmd = new Cmd({
     rawMessage: str,
     message: str,
@@ -104,18 +100,31 @@ Bot.prototype.exec = function(str, ctx, cb) {
     intent: null,
     intentParams: null,
     parts: null,
-    context: ctx
+    context: ctx || {}
   });
   
   cmd.on('respond', function() {
-    cb(null, cmd.response);
-  });
+    this.emit.apply(this, ['response'].concat([].slice.call(arguments)));
+  }.bind(this));
   
-  Queue(cmd)
-    .add(this.middleware)
-    .done(function(err, cmd) {
-      cb(err);
-    });
+  cmd.on('error', function() {
+    this.emit.apply(this, ['error'].concat([].slice.call(arguments)));
+  }.bind(this));
+  
+  cmd.on('log', function() {
+    this.emit.apply(this, ['log'].concat([].slice.call(arguments)));
+  }.bind(this));
+  
+  process.nextTick(function() {
+    Queue(cmd)
+      .add(this.middleware)
+      .done(function(err, cmd) {
+        if (err) {
+          this.emit('error', err);
+        }
+      }.bind(this));
+  }.bind(this));
+  
   
   return this;
 }

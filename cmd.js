@@ -3,6 +3,7 @@
  */
 
 var extend = require('seed-extend');
+var fmt    = require('node-fmt');
 
 /**
  * Bot command
@@ -26,8 +27,16 @@ function Cmd(params) {
 
 Cmd.prototype.result = function() {
   this.emit.apply(null, 
-    ['result'].concat([].slice.call(arguments))
+    ['result', this].concat([].slice.call(arguments))
   );
+}
+
+/**
+ * Format string helper
+ */
+
+Cmd.prototype.format = function() {
+  return fmt.apply(null, [].slice.call(arguments));
 }
 
 /**
@@ -38,7 +47,7 @@ Cmd.prototype.result = function() {
 
 Cmd.prototype.error = function() {
   this.emit.apply(null, 
-    ['error'].concat([].slice.call(arguments))
+    ['error', this].concat([].slice.call(arguments))
   );
 }
 
@@ -50,7 +59,7 @@ Cmd.prototype.error = function() {
 
 Cmd.prototype.log = function() {
   this.emit.apply(null, 
-    ['log'].concat([].slice.call(arguments))
+    ['log', this].concat([].slice.call(arguments))
   );
 }
 

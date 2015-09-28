@@ -7,6 +7,7 @@ var queue       = require('./queue');
 var Cmd         = require('./cmd');
 var Events      = require('events').EventEmitter;
 var inherits    = require('util').inherits;
+var through     = require('through2').obj;
 
 /**
  * Logger
@@ -60,7 +61,7 @@ Bot.prototype.use = function(middleware) {
 /**
  * Register bot command
  *
- * @param {String|RegExp|Array<String,RegExp>} name, optional
+ * @param {String|RegExp|Array<String,RegExp>} pattern
  * @param {Function} middleware...(cmd, next), optional
  * @param {Function} def(cmd, next), command definition
  * @return {Bot} self
@@ -129,6 +130,48 @@ Bot.prototype.exec = function(str, ctx) {
   }.bind(this));
   
   return this;
+}
+
+/**
+ * Create a through stream of objects
+ * that takes chunks like { message: '', context: {} }
+ * and emits chunks like { type: 'result', args: [...] }
+ *
+ * @return {Stream.Tranform} stream
+ */
+
+Bot.prototype.stream = function() {
+  var handle = function(chunk, enc, cb) {
+    this.exec(chunk.message, chunk.context);
+    cb();
+  }.bind(this);
+  
+  var stream = through({
+    highWaterMark: 1024
+  }, handle);
+  
+  this.on('result', function() {
+    stream.push({
+      type: 'result',
+      args: [].slice.call(arguments)
+    });
+  });
+  
+  this.on('error', function() {
+    stream.push({
+      type: 'result',
+      args: [].slice.call(arguments)
+    });
+  });
+  
+  this.on('log', function() {
+    stream.push({
+      type: 'log',
+      args: [].slice.call(arguments)
+    });
+  });
+  
+  return stream;
 }
 
 /**

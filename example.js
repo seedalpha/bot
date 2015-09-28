@@ -2,10 +2,12 @@ var Bot = require('./');
 
 var bot = new Bot();
 
-bot.use(function(cmd, next) {
+function normalize(cmd, next) {
   cmd.message = cmd.message.toLowerCase().trim();
   next();
-});
+}
+
+bot.use(normalize);
 
 bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
   cmd.log('Welcome!');
@@ -15,11 +17,11 @@ bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
 bot.exec('Hi');
 bot.exec('hello');
 
-bot.on('result', function(response) {
+bot.on('result', function(cmd, response) {
   console.log('Bot responded with:', response);
 });
 
-bot.on('log', function(response) {
+bot.on('log', function(cmd, response) {
   console.log('Bot logged', response);
 });
 

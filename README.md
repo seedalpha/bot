@@ -203,7 +203,7 @@ var context = {
   isAdmin: false
 };
 
-bot.on('result', function(cmd, result) {
+bot.on('result', function(channel, result) {
   console.log(result); // 'Apple 125.004', 'Welcome'
 });
 

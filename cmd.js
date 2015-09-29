@@ -27,7 +27,7 @@ function Cmd(params) {
 
 Cmd.prototype.result = function() {
   this.emit.apply(null, 
-    ['result', this].concat([].slice.call(arguments))
+    ['result'].concat([].slice.call(arguments))
   );
 }
 
@@ -47,7 +47,7 @@ Cmd.prototype.format = function() {
 
 Cmd.prototype.error = function() {
   this.emit.apply(null, 
-    ['error', this].concat([].slice.call(arguments))
+    ['error'].concat([].slice.call(arguments))
   );
 }
 

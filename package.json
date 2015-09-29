@@ -1,8 +1,11 @@
 {
   "name": "seed-bot",
-  "version": "3.1.0",
-  "description": "a generic, pluggable chat bot ",
+  "version": "4.0.0",
+  "description": "a generic, pluggable chat bot",
   "main": "index.js",
+  "scripts": {
+    "test": "mocha -R spec -b -t 30000 test/spec"
+  },
   "author": "Vladimir Popov <vlad@seedalpha.net>",
   "license": "SeedAlpha ©2015",
   "dependencies": {
@@ -10,5 +13,9 @@
     "node-fmt": "^1.0.3",
     "seed-extend": "^1.0.0",
     "through2": "^2.0.0"
+  },
+  "devDependencies": {
+    "chai": "^3.3.0",
+    "mocha": "^2.3.3"
   }
 }

@@ -26,9 +26,11 @@ function Cmd(params) {
  */
 
 Cmd.prototype.result = function() {
-  this.emit.apply(null, 
-    ['result'].concat([].slice.call(arguments))
-  );
+  var args = [].slice.call(arguments)
+  if (args.length === 1) {
+    args.unshift(this.channelId);
+  }
+  this.emit.apply(null, ['result'].concat(args));
 }
 
 /**
@@ -46,8 +48,12 @@ Cmd.prototype.format = function() {
  */
 
 Cmd.prototype.error = function() {
+  var args = [].slice.call(arguments)
+  if (args.length === 1) {
+    args.unshift(this.channelId);
+  }
   this.emit.apply(null, 
-    ['error'].concat([].slice.call(arguments))
+    ['error'].concat(args)
   );
 }
 

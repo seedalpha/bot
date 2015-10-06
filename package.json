@@ -1,6 +1,6 @@
 {
   "name": "seed-bot",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "a generic, pluggable chat bot",
   "main": "index.js",
   "scripts": {

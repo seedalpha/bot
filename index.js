@@ -125,7 +125,7 @@ Bot.prototype.exec = function(str, ctx) {
     .add(this.middleware)
     .done(function(err, cmd) {
       log('Error: %j', err);
-      if (err) this.emit('error', err);
+      if (err) this.emit('error', ctx.channel.id, err);
     }.bind(this));
   }.bind(this));
   

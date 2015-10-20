@@ -10,7 +10,7 @@ a generic, pluggable chat bot
 
 #### Bot
 
-##### constructor():Bot
+##### constructor([{Object} options]):Bot
 
 ```javacript
 var bot = new Bot();
@@ -22,7 +22,7 @@ Registers new command middleware
 
 ```javacript
 function trim(cmd, next) {
-  cmd.message = cmd.meesage.trim();
+  cmd.message = cmd.message.trim();
   next();
 }
 
@@ -31,30 +31,29 @@ bot.use(trim);
 
 ##### cmd({String|RegExp|Array<String|RegExp>} pattern[, {Function} ...middleware(cmd, next)], {Function} definition(cmd, next)):Bot
 
-Registers a new bot command. it will try to match incoming message against intents/patterns, execute middleware and definition. If cmd is a string, it will be matched against intent, if it's a regexp, it will be match agaisnt a pattern
+Registers a new bot command. It will try to match incoming message against intents/patterns, execute middleware and definition. If cmd is a string, it will be matched against intent, if it's a regexp, it will be match agaisnt a message
 
 ```javacript
-
 bot.use(wit(witApiKey));
 
 // string
 bot.cmd('hi', function(cmd) {
-  cmd.result('Hello');
+  cmd.send('Hello');
 });
 
 // strings
 bot.cmd(['hi', 'hello', 'welcome'], function(cmd) {
-  cmd.result(cmd.format('%s to you!', cmd.message));
+  cmd.send(cmd.channel.id, fmt('%s to you!', cmd.message));
 });
 
 // regex
 bot.cmd(/hi/i, function(cmd) {
-  cmd.result('Hello');
+  cmd.send(cmd.channel.id, 'Hello');
 });
 
 // regex array
 bot.cmd([/hi .*/, /hello .*/], function(cmd) {
-  cmd.result(cmd.format('%s back!', cmd.message.split(' ').shift()));
+  cmd.send(cmd.channel.id, fmt('%s back!', cmd.message.split(' ').shift()));
 });
 ```
 
@@ -62,34 +61,43 @@ bot.cmd([/hi .*/, /hello .*/], function(cmd) {
 
 Executes a command.
 
-Note: bot is an event emitter, so, in order to get back the response, one has to add an event listener
-
 ```javascript
-
-bot.on('result', function(cmd, channel, message) {
-  // do stuff with message
-});
-
-bot.on('error', function(cmd, channel, message) {
-  // do stuff with message
+bot.on('send', function(channel, message) {
+  // '8642', 'Invitation has been successfully sent'
+  // send bot response
 });
 
 bot.cmd(/invite .*/i, function(cmd, next) {
   if (!cmd.context.isAdmin) {
-    return bot.error('Unauthorized');
+    return cmd.log('Unauthorized');
   }
   
   api.invite(cmd.params[0], function(err) {
-    if (err) return bot.error(err);
-    bot.result(cmd.channel, 'Invitation has been successfully sent');
+    if (err) return cmd.log(err);
+    cmd.send(cmd.channel.id, 'Invitation has been successfully sent');
   });
 });
 
 bot.exec('invite user@example.com', { 
   user: '1234', 
   channel: '8642', 
-  isAdmin: false
+  isAdmin: true
 });
+```
+##### send({String|Object} channel[, {String} message]):Bot
+
+Send a bot message
+
+```javascript
+
+bot.send('echo', 'user said: hello');
+
+bot.send({
+  type: 'message',
+  channel: 'echo',
+  text: 'user said: hello'
+});
+
 ```
 
 ##### stream():Stream
@@ -104,25 +112,20 @@ slackStream
   .pipe(slackStream);
 ```
 
-#### Cmd
-
-Bot commands are internally instantiated as `Cmd`s
+#### cmd
 
 ```javascript
 bot.use(function(cmd, next) {
-  cmd.message // 'Hello'
-  cmd.rawMessage // 'Hello'
-  cmd.params // [], if cmd is matched against a pattern, params will be matched unknowns
-  cmd.intent // if wit is used, intent should be a matched intent from wit
-  cmd.intentParams // wit intent params
-  cmd.confidence // wit matching confidence
-  cmd.parts // null, a placeholder for matched parts
-  cmd.context // exec context, eg.: { user: '1234', channel: '8642' }
-  cmd.emit // bot's emit
-  cmd.format(expression, ...args) // helper to format bot messages. eg.: ('Hello %s', cmd.context.user)
-  cmd.result(...args) // respond with success, will emit `result`
-  cmd.error(...args) // respond with error, will emit `error`
-  cmd.log(...args) // log to debug, will emit `log`
+  cmd.message       // 'Hello'
+  cmd.rawMessage    // 'Hello'
+  cmd.params        // [], if cmd is matched against a pattern, params will be matched unknowns
+  cmd.intent        // if wit is used, intent should be a matched intent from wit
+  cmd.intentParams  // wit intent params
+  cmd.confidence    // wit matching confidence
+  cmd.parts         // null, a placeholder for matched parts
+  cmd.context       // exec context, eg.: { user: '1234', channel: '8642' }
+  cmd.send(channel, message) // send bot message
+  cmd.log(...args)  // log to debug, will emit `log`
 });
 
 bot.exec('Hello', { user: '1234', channel: '8642' });
@@ -173,7 +176,7 @@ bot.use(stripLeading('<@U12312312321>'));
 bot.cmd('get_stock_quote', function(cmd, next) {
   getQuote(cmd.intentParams.ticker, function(err, result) {
     if (err) return next(err);
-    cmd.result(cmd.format('%s: %s', result.company, result.price));
+    cmd.send(cmd.channel, fmt('%s: %s', result.company, result.price));
   });
 });
 
@@ -181,20 +184,21 @@ bot.cmd('get_stock_quote', function(cmd, next) {
 bot.cmd(/quote .*/, function(cmd, next) {
   getQuote(cmd.params[0], function(err, result) {
     if (err) return next(err);
-    cmd.log(cmd.format('%s: %s', result.company, result.price));
-    cmd.result(cmd.format('%s: %s', result.company, result.price));
+    var message = fmt('%s: %s', result.company, result.price);
+    cmd.log(message);
+    cmd.send(cmd.channel, message);
   });
 });
 
 // match any regex or intent
 bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
-  cmd.result('Welcome!');
+  cmd.send(cmd.channel, 'Welcome!');
 });
 
 // have second level of middleware for after command had been matched
 bot.cmd(/invite .*/, isAdmin, function(cmd, next) {
   invite(cmd.params[0]);
-  cmd.result(fmt('User %s invited', cmd.params[0]));
+  cmd.send(cmd.channel, fmt('User %s invited', cmd.params[0]));
 });
 
 var context = {
@@ -203,12 +207,12 @@ var context = {
   isAdmin: false
 };
 
-bot.on('result', function(channel, result) {
-  console.log(result); // 'Apple 125.004', 'Welcome'
+bot.on('send', function(channel, message) {
+  console.log(channel, message); // '123abc', 'Apple 125.004'; '123abc', 'Welcome'
 });
 
 bot.exec('quote AAPL', context);
-bot.exec('hi there!);
+bot.exec('hi there!, context);
 
 ```
 

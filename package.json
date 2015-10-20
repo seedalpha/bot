@@ -1,6 +1,6 @@
 {
   "name": "seed-bot",
-  "version": "4.1.1",
+  "version": "5.0.0",
   "description": "a generic, pluggable chat bot",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "debug": "^2.2.0",
     "node-fmt": "^1.0.3",
     "seed-extend": "^1.0.0",
+    "seed-queue": "^2.1.0",
     "through2": "^2.0.0"
   },
   "devDependencies": {

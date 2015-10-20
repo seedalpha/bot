@@ -15,11 +15,11 @@ bot.use(compact);
 bot.use(downcase);
 
 bot.cmd([/hello/, /hi/], function(cmd, next) {
-  cmd.result('Hello!');
+  cmd.send(cmd.channel, 'Hello!');
 });
 
-bot.on('result', function(cmd, result) {
-  console.log(result); // 'Hello!'
+bot.on('send', function(channel, message) {
+  console.log(channel, message); // '1234', 'Hello!'
 });
 
-bot.exec(' HeLlo  ');
+bot.exec(' HeLlo  ', { channel: '1234' });

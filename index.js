@@ -3,8 +3,7 @@
  */
 
 var debug       = require('debug');
-var queue       = require('./queue');
-var Cmd         = require('./cmd');
+var queue       = require('seed-queue');
 var Events      = require('events').EventEmitter;
 var inherits    = require('util').inherits;
 var through     = require('through2').obj;
@@ -17,30 +16,35 @@ var log = debug('bot');
 
 /**
  * Constructor
+ *
+ * @param {Object} options
  */
 
-function Bot() {
+function Bot(options) {
   if (!(this instanceof Bot)) {
-    return new Bot();
+    return new Bot(options);
   }
   
   Events.call(this);
   
   this.middleware = [];
+  this.options = options || {};
+  this.send = this.send.bind(this);
+  this.log = this.log.bind(this);
+  
+  var handle = function(chunk, enc, cb) {
+    if (chunk.type === 'message') {
+      this.exec(chunk.text || '', chunk);
+    }
+    this.emit(chunk.type, chunk, this);
+    cb();
+  }.bind(this);
+  
+  this._stream = through({
+    highWaterMark: 1024
+  }, handle);
   
   log('Initialized');
-  
-  this.on('result', function() {
-    log('Result: %j', arguments);
-  });
-  
-  this.on('error', function() {
-    log('Error %j', arguments);
-  });
-  
-  this.on('log', function() {
-    log(arguments);
-  });
 }
 
 inherits(Bot, Events);
@@ -54,7 +58,6 @@ inherits(Bot, Events);
 
 Bot.prototype.use = function(middleware) {
   this.middleware.push(middleware);
-  log('Middleware %s', this.middleware.length);
   return this;
 }
 
@@ -94,7 +97,6 @@ Bot.prototype.cmd = function() {
         queue(cmd).add(args).add(def).done(next);
       });
     }
-    log('Middleware %s', this.middleware.length);
   }.bind(this));
   
   return this;
@@ -112,7 +114,7 @@ Bot.prototype.cmd = function() {
 Bot.prototype.exec = function(str, ctx) {
   process.nextTick(function() {
     log('Exec %s %j', str, ctx);
-    queue(Cmd({
+    queue({
       rawMessage: str,
       message: str,
       params: [],
@@ -120,58 +122,58 @@ Bot.prototype.exec = function(str, ctx) {
       intentParams: null,
       parts: null,
       context: ctx || {},
-      emit: this.emit.bind(this)
-    }))
+      options: this.options,
+      send: this.send,
+      log: this.log
+    })
     .add(this.middleware)
-    .done(function(err, cmd) {
+    .end(function(err, cmd) {
       log('Error: %j', err);
-      if (err) this.emit('error', ctx.channel.id, err);
+      if (err) this.emit('error', err, cmd);
     }.bind(this));
   }.bind(this));
+  return this;
+}
+
+/**
+ * Send message on behalf of bot
+ * 
+ * @param {String} channelId
+ * @param {String} message
+ * @return {Bot} self
+ */
+
+Bot.prototype.send = function(channel, message) {
+  if (typeof channel === typeof message) { // if they are strings
+    this._stream.push([channel, message]);
+  } else {
+    this._stream.push(channel); // if it's an object
+  }
+  
+  this.emit('send', channel, message);
   
   return this;
 }
 
 /**
- * Create a through stream of objects
- * that takes chunks like { message: '', context: {} }
- * and emits chunks like { type: 'result', args: [...] }
+ * Get a through stream of messages
  *
  * @return {Stream.Tranform} stream
  */
 
 Bot.prototype.stream = function() {
-  var handle = function(chunk, enc, cb) {
-    this.exec(chunk.message, chunk.context);
-    cb();
-  }.bind(this);
-  
-  var stream = through({
-    highWaterMark: 1024
-  }, handle);
-  
-  this.on('result', function() {
-    stream.push({
-      type: 'result',
-      args: [].slice.call(arguments)
-    });
-  });
-  
-  this.on('error', function() {
-    stream.push({
-      type: 'result',
-      args: [].slice.call(arguments)
-    });
-  });
-  
-  this.on('log', function() {
-    stream.push({
-      type: 'log',
-      args: [].slice.call(arguments)
-    });
-  });
-  
-  return stream;
+  return this._stream;
+}
+
+/**
+ * Log stuff
+ * 
+ * @return {Bot} self
+ */
+
+Bot.prototype.log = function() {
+  log.apply(log, [].slice.call(arguments));
+  return this;
 }
 
 /**

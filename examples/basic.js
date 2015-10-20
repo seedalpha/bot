@@ -2,11 +2,11 @@ var Bot = require('../');
 var bot = new Bot();
 
 bot.cmd(/hello/i, function(cmd) {
-  cmd.result('Hello!');
+  cmd.send(cmd.channel, 'Hello!');
 });
 
-bot.on('result', function(cmd, result) {
-  console.log('Bot responded with', result); // 'Hello!'
+bot.on('send', function(channel, message) {
+  console.log('Bot responded with', channel, message); // '1234', 'Hello!'
 });
 
-bot.exec('Hello');
+bot.exec('Hello', { channel: '1234' });

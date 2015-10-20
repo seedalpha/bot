@@ -11,11 +11,11 @@ function isAdmin(cmd, next) {
 
 bot.cmd(/invite .*/, isAdmin, function(cmd, next) {
   api.invite(cmd.params[0]);
-  cmd.result(cmd.format('User %s is invited', cmd.params[0]));
+  cmd.send(cmd.channel, fmt('User %s is invited', cmd.params[0]));
 });
 
-bot.on('result', function(cmd, result) {
-  console.log(result); // 'User admin@example.com is invited!'
+bot.on('send', function(channel, message) {
+  console.log(message); // 'User admin@example.com is invited!'
 });
 
 bot.exec('invite admin@example.com', { 

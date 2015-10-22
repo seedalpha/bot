@@ -112,6 +112,18 @@ slackStream
   .pipe(slackStream);
 ```
 
+##### on({String} type, {Function} callback):Bot
+
+Bot extends event emitter to bubble slack events up
+
+```javascript
+bot.on('team_join', function(message) {
+  // https://api.slack.com/events/team_join
+  message.type // 'team_join'
+  message.user // { ... }
+});
+```
+
 #### cmd
 
 ```javascript
@@ -212,7 +224,7 @@ bot.on('send', function(channel, message) {
 });
 
 bot.exec('quote AAPL', context);
-bot.exec('hi there!, context);
+bot.exec('hi there!', context);
 
 ```
 

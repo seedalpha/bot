@@ -10,18 +10,9 @@ function normalize(cmd, next) {
 bot.use(normalize);
 
 bot.cmd([/hi.*/, /hello.*/, 'greeting'], function(cmd, next) {
-  cmd.log('Welcome!');
-  cmd.result('Welcome!');
+  cmd.send('123', 'Welcome!');
 });
 
 bot.exec('Hi');
 bot.exec('hello');
-
-bot.on('result', function(cmd, response) {
-  console.log('Bot responded with:', response);
-});
-
-bot.on('log', function(cmd, response) {
-  console.log('Bot logged', response);
-});
 

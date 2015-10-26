@@ -114,6 +114,7 @@ Bot.prototype.cmd = function() {
 Bot.prototype.exec = function(str, ctx) {
   process.nextTick(function() {
     log('Exec %s %j', str, ctx);
+    this.emit('exec', str, ctx);
     queue({
       rawMessage: str,
       message: str,
@@ -128,8 +129,12 @@ Bot.prototype.exec = function(str, ctx) {
     })
     .add(this.middleware)
     .end(function(err, cmd) {
-      log('Error: %j', err);
-      if (err) this.emit('error', err, cmd);
+      if (err) {
+        this.emit('error', err, cmd);
+        log('Error: %j', err);
+      } else {
+        log('Finished');
+      }
     }.bind(this));
   }.bind(this));
   return this;
